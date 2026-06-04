@@ -637,6 +637,14 @@ html.lenis body {
     gap: 18px;
     padding: calc(var(--nav-h) + 18px) clamp(18px, 5vw, 40px) 30px;
   }
+  /* keep the stacked column phone-width so the dashboard rows stay tight
+     (space-between sprawls on wide tablets, pushing values to the far edge) */
+  .tour-video,
+  .tour-stage {
+    width: 100%;
+    max-width: 430px;
+    margin-inline: auto;
+  }
   .tour-video {
     height: min(38vh, 300px);
     transform: none;
