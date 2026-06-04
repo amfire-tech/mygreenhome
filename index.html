@@ -2,6 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Forward the *.pages.dev preview host to the real domain (one canonical
+         site). Runs only on pages.dev, so the real domain never loops. -->
+    <script>
+      (function () {
+        if (location.hostname === 'mygreenhome.pages.dev') {
+          location.replace('https://mygreenhome.in' + location.pathname + location.search + location.hash);
+        }
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#060d09" />
     <meta name="robots" content="index, follow" />
