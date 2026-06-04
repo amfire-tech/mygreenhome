@@ -292,8 +292,9 @@ html.lenis body {
     background: linear-gradient(0deg, rgba(8, 14, 10, 0.95) 0%, rgba(8, 14, 10, 0.6) 44%, rgba(8, 14, 10, 0.25) 100%);
   }
   .hero-content {
-    justify-content: flex-end;
-    padding-bottom: 92px;
+    justify-content: center;
+    padding-top: calc(var(--nav-h) + 20px);
+    padding-bottom: clamp(40px, 7vh, 72px);
   }
 }
 
@@ -663,9 +664,24 @@ html.lenis body {
     padding: 22px;
     height: auto;
     min-height: min(60vh, 480px);
+    text-align: center; /* centre the header block (badge · title · sub) */
+  }
+  .tour-card__badge {
+    align-self: center;
   }
   .tour-card__sub {
     max-width: none;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  /* cluster icon · name · tag together in the middle (match the metric card),
+     instead of name far-left and tag far-right */
+  .tour-plant {
+    justify-content: center;
+  }
+  .tour-plant__text {
+    flex: none;
+    text-align: left;
   }
   .tour-card__list {
     gap: 8px;
@@ -897,6 +913,33 @@ html.lenis body {
 
 @media (max-width: 1559px) {
   .xform__rail { display: none; }
+}
+/* Phone/tablet — centre the head + card + dots as one tight cluster and let the
+   landscape card fill the width, instead of a small image floating in a tall
+   stage with big empty gaps above and below. */
+@media (max-width: 760px) {
+  .xform {
+    height: 300vh;
+  }
+  .xform__sticky {
+    justify-content: center;
+    padding-top: calc(var(--nav-h) + 20px);
+    padding-bottom: 24px;
+  }
+  .xform__head {
+    margin-bottom: clamp(16px, 3vh, 28px);
+  }
+  .xform__stage {
+    flex: none;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    max-height: 64vh;
+  }
+  .xform__card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 }
 
 /* ============================================================
@@ -2544,7 +2587,11 @@ html.lenis body {
   right: 0;
   z-index: 140;
   padding: 17px clamp(20px, 5vw, 56px);
-  transition: background 0.4s ease, box-shadow 0.4s ease, padding 0.3s ease;
+  transition: transform 0.45s var(--ease-smooth), background 0.4s ease, box-shadow 0.4s ease, padding 0.3s ease;
+}
+/* slides up out of view on scroll-down, back in on scroll-up */
+.mgh-nav.is-hidden {
+  transform: translateY(-100%);
 }
 .mgh-nav.is-scrolled {
   background: rgba(10, 18, 13, 0.42);

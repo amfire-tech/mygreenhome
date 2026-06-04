@@ -56,6 +56,8 @@ export default function App() {
   const durationRef = useRef(VIDEO_DURATION);
   const videoPlayheadRef = useRef(0);
   const navScrolledRef = useRef(false);
+  const lastScrollRef = useRef(0); // for nav hide-on-scroll-down / show-on-up
+  const navHiddenRef = useRef(false);
   const currentSceneIdRef = useRef(0);
   const glowRef = useRef(hexToRgb(BG_MAP[0].glow));
 
@@ -131,11 +133,24 @@ export default function App() {
       // 6. Nav theme — transparent over the bright hero, then a solid dark bar
       //    once you scroll past it (readable over every section below).
       if (navRef.current) {
-        const scrolled = scrollY > window.innerHeight * 0.6;
+        const vh = window.innerHeight;
+        const scrolled = scrollY > vh * 0.6;
         if (scrolled !== navScrolledRef.current) {
           navScrolledRef.current = scrolled;
           navRef.current.classList.toggle('is-scrolled', scrolled);
         }
+        // Hide the bar on scroll-down, reveal it on scroll-up (standard mobile
+        // pattern). Always visible near the top. Ignore tiny jitters.
+        const dy = scrollY - lastScrollRef.current;
+        let hidden = navHiddenRef.current;
+        if (scrollY < vh * 0.5) hidden = false;
+        else if (dy > 4) hidden = true;
+        else if (dy < -4) hidden = false;
+        if (hidden !== navHiddenRef.current) {
+          navHiddenRef.current = hidden;
+          navRef.current.classList.toggle('is-hidden', hidden);
+        }
+        lastScrollRef.current = scrollY;
       }
 
       // 7. Mouse parallax — one set of vars on the sticky drives both the
