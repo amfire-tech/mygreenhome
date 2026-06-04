@@ -2542,7 +2542,7 @@ html.lenis body {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 50;
+  z-index: 140;
   padding: 17px clamp(20px, 5vw, 56px);
   transition: background 0.4s ease, box-shadow 0.4s ease, padding 0.3s ease;
 }
@@ -2556,8 +2556,6 @@ html.lenis body {
   padding-bottom: 11px;
 }
 .mgh-nav__inner {
-  position: relative;
-  z-index: 60; /* keep logo + close (X) button above the open mobile overlay */
   max-width: 1340px;
   margin: 0 auto;
   display: flex;
@@ -2631,7 +2629,7 @@ html.lenis body {
 .mgh-nav__overlay {
   position: fixed;
   inset: 0;
-  z-index: 49;
+  z-index: 130; /* above the WhatsApp FAB (120) so the open menu covers it */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2658,6 +2656,13 @@ html.lenis body {
   .mgh-nav__links,
   .mgh-nav__inner > .mgh-nav__cta { display: none; }
   .mgh-nav__burger { display: block; }
+}
+/* Phones — a slimmer, cleaner bar (the default felt too tall). */
+@media (max-width: 600px) {
+  .mgh-nav { padding: 12px 18px; }
+  .mgh-nav.is-scrolled { padding-top: 9px; padding-bottom: 9px; }
+  .mgh-nav__logo,
+  .mgh-nav__logo-img { height: 30px; }
 }
 @media (min-width: 1025px) {
   .mgh-nav__overlay { display: none; }

@@ -22,7 +22,8 @@ const Nav = forwardRef(function Nav({ onNavigate }, ref) {
   };
 
   return (
-    <nav ref={ref} className="mgh-nav">
+    <>
+      <nav ref={ref} className="mgh-nav">
       <div className="mgh-nav__inner">
         <button className="mgh-nav__logo" onClick={() => go('hero')} aria-label="MyGreenHome — home">
           <img className="mgh-nav__logo-img mgh-nav__logo-img--light" src="/logo.png" alt="MyGreenHome" />
@@ -51,9 +52,12 @@ const Nav = forwardRef(function Nav({ onNavigate }, ref) {
         >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
-      </div>
+        </div>
+      </nav>
 
-      {/* Mobile overlay */}
+      {/* Mobile overlay — MUST be a sibling of <nav>, never a child: the
+          scrolled nav uses backdrop-filter, which would trap this fixed overlay
+          inside the small nav box instead of letting it cover the viewport. */}
       <div
         className="mgh-nav__overlay"
         style={{ opacity: open ? 1 : 0, pointerEvents: open ? 'auto' : 'none' }}
@@ -68,7 +72,7 @@ const Nav = forwardRef(function Nav({ onNavigate }, ref) {
           Let's Green Your Space
         </button>
       </div>
-    </nav>
+    </>
   );
 });
 
