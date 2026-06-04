@@ -1,10 +1,16 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 
 // Scroll-synced video background — the heart of the experience.
 //
 // We never call play(): App.jsx drives `video.currentTime` from scroll progress
 // in its rAF loop. The walkthrough is encoded all-intra (every frame a keyframe)
 // so seeking is instant — that's what keeps the scrub smooth.
+//
+// ⚠️ Hosting note: Cloudflare Pages serves static files WITHOUT HTTP range
+// support, so a normal <video src="…mp4"> is reported non-seekable
+// (seekable.end === 0) and the scrub freezes at frame 0. To stay host-agnostic
+// we fetch the whole clip once and play it from an in-memory blob URL — a local
+// blob is always fully seekable. (Repeat visits hit the browser/HTTP cache.)
 //
 // A cinematic colour grade (CSS filter + layered emerald/vignette overlays)
 // turns the bright daytime render into a moody, premium dusk look so the cream
@@ -15,6 +21,27 @@ import { forwardRef, useState } from 'react';
 //   onError()               — fired if the video fails (fallback bg shows through)
 const VideoLayer = forwardRef(function VideoLayer({ onLoad, onError }, ref) {
   const [ready, setReady] = useState(false);
+  const [src, setSrc] = useState(null);
+
+  useEffect(() => {
+    let url = null;
+    let cancelled = false;
+    fetch('/video/walkthrough.mp4')
+      .then((r) => {
+        if (!r.ok) throw new Error(`video ${r.status}`);
+        return r.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        url = URL.createObjectURL(blob);
+        setSrc(url);
+      })
+      .catch(() => onError?.());
+    return () => {
+      cancelled = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [onError]);
 
   const handleLoadedData = (e) => {
     const v = e.currentTarget;
@@ -27,7 +54,7 @@ const VideoLayer = forwardRef(function VideoLayer({ onLoad, onError }, ref) {
     <>
       <video
         ref={ref}
-        src="/video/walkthrough.mp4"
+        src={src || undefined}
         muted
         playsInline
         preload="auto"
