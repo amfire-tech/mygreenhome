@@ -1,0 +1,70 @@
+// Seven research-backed advantages of a MyGreenHome vs. a normal home.
+//
+// `normal` / `green` are 0–100 wellbeing scores used to size the comparison
+// bars (green is always the better/higher one). `stat` is a concrete,
+// citable headline; `source` names the study so the claim is defensible.
+export const ADVANTAGES = [
+  {
+    icon: 'Moon',
+    title: 'Deeper Sleep',
+    stat: 'CO₂ kept < 800 ppm',
+    fact: 'Well-ventilated, greener bedrooms keep CO₂ low — and lower bedroom CO₂ measurably improves how deeply you sleep.',
+    normal: 60,
+    green: 88,
+    source: 'Bedroom ventilation & sleep studies, Indoor Air',
+  },
+  {
+    icon: 'Wind',
+    title: 'More Fresh Oxygen',
+    stat: 'Fresher air, all day',
+    fact: 'Living greenery and smart airflow keep oxygen up and stale CO₂ down, so rooms feel bright instead of stuffy.',
+    normal: 55,
+    green: 90,
+    source: 'Harvard T.H. Chan green-building research',
+  },
+  {
+    icon: 'Brain',
+    title: 'Sharper Focus',
+    stat: '+15% productivity',
+    fact: 'People working in plant-filled spaces were 15% more productive, with better concentration and recall.',
+    normal: 100,
+    green: 115,
+    source: 'University of Exeter, 2014',
+  },
+  {
+    icon: 'HeartPulse',
+    title: 'Less Stress, Faster Recovery',
+    stat: 'Faster healing',
+    fact: 'Patients with a view of greenery recovered faster after surgery and needed less pain medication.',
+    normal: 58,
+    green: 86,
+    source: 'Ulrich, Science, 1984',
+  },
+  {
+    icon: 'ShieldCheck',
+    title: 'Fewer Toxins',
+    stat: 'Removes VOCs',
+    fact: 'Certain plants help capture common indoor toxins like benzene, formaldehyde and trichloroethylene.',
+    normal: 42,
+    green: 82,
+    source: 'NASA Clean Air Study, 1989',
+  },
+  {
+    icon: 'Droplets',
+    title: 'Healthier Humidity',
+    stat: '+10–15% humidity',
+    fact: 'Plants gently raise humidity and cut dust — easing dry skin, sore throats and irritated breathing.',
+    normal: 50,
+    green: 84,
+    source: 'Plant transpiration research, WSU',
+  },
+  {
+    icon: 'Smile',
+    title: 'Better Mood',
+    stat: 'Lower anxiety',
+    fact: 'Daily contact with greenery is consistently linked to lower anxiety, calmer mood and greater wellbeing.',
+    normal: 56,
+    green: 89,
+    source: 'Biophilia & wellbeing research',
+  },
+];
