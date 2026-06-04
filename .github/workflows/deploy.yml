@@ -1,0 +1,38 @@
+name: Deploy to Cloudflare Pages
+
+# Every push to prod builds the site and deploys it to Cloudflare Pages.
+# Requires two repo secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   — a token with "Cloudflare Pages: Edit"
+#   CLOUDFLARE_ACCOUNT_ID  — ac5fd2ebc022a6039b709a7dd4e26cf8
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '3.114.1'
+          command: pages deploy dist --project-name=mygreenhome --branch=prod
