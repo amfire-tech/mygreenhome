@@ -30,3 +30,7 @@ x264_2pass.log*
 *.njsproj
 *.sln
 *.sw?
+
+# scratch / diagnostics
+_*.mjs
+_*.png
