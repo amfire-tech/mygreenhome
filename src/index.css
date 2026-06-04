@@ -581,9 +581,10 @@ html.lenis body {
 }
 
 .tour-metric {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 18px;
   align-items: center;
-  justify-content: space-between;
   padding: 7px 4px;
   border-bottom: 1px solid rgba(245, 240, 232, 0.07);
   opacity: 0;
@@ -593,10 +594,12 @@ html.lenis body {
 .tour-metric__label {
   font-size: 12px;
   color: rgba(245, 240, 232, 0.6);
+  text-align: right; /* meets the value at the card's centre */
 }
 .tour-metric__right {
   display: flex;
   align-items: center;
+  justify-content: flex-start; /* value starts at centre, not the far edge */
   gap: 10px;
 }
 .tour-metric__value {
