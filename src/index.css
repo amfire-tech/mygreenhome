@@ -660,6 +660,7 @@ html.lenis body {
   position: relative;
   height: 360vh; /* scroll dwell for the 4 cards */
   background: #060d09;
+  overflow: clip; /* contain the ambient orbs without breaking the sticky child */
 }
 /* Ambient depth orbs drifting in the side gutters. */
 .xform__orb {
