@@ -14,6 +14,9 @@ export default function ParticleCanvas({ mouseRef, bright = false }) {
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // On phones/touch the per-frame canvas redraw isn't worth the CPU (especially
+    // layered over the scroll-scrubbed video) — render a static scatter instead.
+    const lite = reduced || window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -84,8 +87,8 @@ export default function ParticleCanvas({ mouseRef, bright = false }) {
       raf = requestAnimationFrame(frame);
     };
 
-    if (reduced) {
-      // Static, very subtle scatter — no motion.
+    if (lite) {
+      // Static, very subtle scatter — no motion (reduced-motion or mobile).
       for (const p of particles) {
         ctx.save();
         ctx.translate(p.x, p.y);

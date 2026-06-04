@@ -60,6 +60,8 @@ export default function App() {
   const navHiddenRef = useRef(false);
   const currentSceneIdRef = useRef(0);
   const glowRef = useRef(hexToRgb(BG_MAP[0].glow));
+  const lastGlowKeyRef = useRef(-1); // skip repainting the bg gradient when unchanged
+  const lastPageProgRef = useRef(-1); // skip writing --page-progress when unchanged
 
   // --- Measure the sticky stage scroll span (and keep it fresh on resize).
   useEffect(() => {
@@ -92,8 +94,13 @@ export default function App() {
       const sp = clamp((scrollY - stageTopRef.current) / (stickyMaxRef.current || 1), 0, 1);
 
       // 1a. Whole-page progress (drives the Living Vine + any --page-progress CSS).
+      //     Only write when it actually changes — avoids a style recalc every frame.
       if (lenis && lenis.limit > 0) {
-        document.documentElement.style.setProperty('--page-progress', clamp(lenis.scroll / lenis.limit, 0, 1).toFixed(4));
+        const pp = Math.round(clamp(lenis.scroll / lenis.limit, 0, 1) * 1000);
+        if (pp !== lastPageProgRef.current) {
+          lastPageProgRef.current = pp;
+          document.documentElement.style.setProperty('--page-progress', (pp / 1000).toFixed(3));
+        }
       }
 
       // 2. Smooth mouse.
@@ -118,10 +125,13 @@ export default function App() {
       if (video && videoLoaded) {
         const dur = durationRef.current || VIDEO_DURATION;
         const ph = videoPlayheadRef;
-        ph.current = lerp(ph.current, sp * dur, 0.3);
+        ph.current = lerp(ph.current, sp * dur, 0.35);
         if (sp <= 0.001) ph.current = 0;
         else if (sp >= 0.999) ph.current = dur;
-        if (Math.abs(video.currentTime - ph.current) > 0.004) {
+        // Only seek when we'd land on a genuinely different frame. The clip is
+        // 30fps (~33ms/frame), so sub-frame seeks just re-decode the same image
+        // — gating at ~1 frame cuts decode work ~8x and kills the scrub lag.
+        if (Math.abs(video.currentTime - ph.current) > 0.03) {
           try {
             video.currentTime = ph.current;
           } catch {
@@ -160,16 +170,21 @@ export default function App() {
         stickyRef.current.style.setProperty('--par-y', ry.toFixed(3));
       }
 
-      // 8. Background spotlight — lerp glow color across scenes + follow mouse.
+      // 8. Background spotlight — colour lerps across scenes. Repaint ONLY when
+      //    the (integer) colour changes; a full-screen gradient repaint every
+      //    frame was the single biggest source of jank. Mouse-follow dropped —
+      //    imperceptible on a blurred glow, not worth a per-frame repaint.
       if (bgLayerRef.current) {
         const tgt = hexToRgb((BG_MAP[sceneIdNow] || BG_MAP[0]).glow);
         const g = glowRef.current;
-        g.r = lerp(g.r, tgt.r, 0.04);
-        g.g = lerp(g.g, tgt.g, 0.04);
-        g.b = lerp(g.b, tgt.b, 0.04);
-        const cx = 50 + rx * 8;
-        const cy = 50 + ry * 8;
-        bgLayerRef.current.style.background = `radial-gradient(ellipse at ${cx}% ${cy}%, rgba(${g.r | 0}, ${g.g | 0}, ${g.b | 0}, 0.5), transparent 65%)`;
+        g.r = lerp(g.r, tgt.r, 0.05);
+        g.g = lerp(g.g, tgt.g, 0.05);
+        g.b = lerp(g.b, tgt.b, 0.05);
+        const key = ((g.r | 0) << 16) | ((g.g | 0) << 8) | (g.b | 0);
+        if (key !== lastGlowKeyRef.current) {
+          lastGlowKeyRef.current = key;
+          bgLayerRef.current.style.background = `radial-gradient(ellipse at 50% 46%, rgba(${g.r | 0}, ${g.g | 0}, ${g.b | 0}, 0.5), transparent 65%)`;
+        }
       }
 
       rafRef.current = requestAnimationFrame(tick);
