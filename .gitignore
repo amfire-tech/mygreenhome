@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# secrets / env (never commit)
+.env
+.env.*
+!.env.example
+
 # Local video masters (4K source + old export) — too big for git/deploy
 video-src/
 ffmpeg2pass*.log*

@@ -102,7 +102,7 @@ function StatRows({ stats, note, loading }) {
 }
 
 // ── One comparison card ─────────────────────────────────────
-function CompareCard({ variant, place, aqi, pm25, color, bandLabel, cigs, stats, statsNote, statsLoading }) {
+function CompareCard({ variant, place, aqi, pm25, color, bandLabel, cigs, stats, statsNote, statsLoading, live }) {
   const out = variant === 'out';
   const cigDisplay = fmt(useCountUp(cigs, true, 1500));
   return (
@@ -111,6 +111,12 @@ function CompareCard({ variant, place, aqi, pm25, color, bandLabel, cigs, stats,
         <span className="air-card__place font-body">
           {out ? <MapPin size={13} /> : <Wind size={13} />}
           {place}
+          {out && live && (
+            <span className="air-live" title="Live air-quality data">
+              <span className="air-live__dot" />
+              LIVE
+            </span>
+          )}
         </span>
         <span className="air-card__band font-body" style={{ color, background: `${color}22` }}>
           {bandLabel}
@@ -280,6 +286,7 @@ export default function AirCheck() {
             color={outBand.color}
             bandLabel={outBand.label}
             cigs={cigsOut}
+            live={!!data}
             stats={hist}
             statsLoading={history.loading}
             statsNote="cigarettes/day if that air lasted all day"
