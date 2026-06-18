@@ -75,4 +75,4 @@ export const WHATSAPP_URL = 'https://wa.me/919368408577';
 export const PHONE_TEL = 'tel:+919368408577';
 export const PHONE_DISPLAY = '+91 93684 08577';
 export const EMAIL = 'hello@mygreenhome.in';
-export const WEBSITE = 'www.mygreenhome.in';
+export const WEBSITE = 'mygreenhome.in';
