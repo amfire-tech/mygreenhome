@@ -51,7 +51,7 @@ export default function HomeTour({ mouseRef }) {
   useEffect(() => {
     let url = null;
     let cancelled = false;
-    fetch('/video/walkthrough.mp4')
+    fetch('/video/walkthrough.mp4?v=60fps')
       .then((r) => {
         if (!r.ok) throw new Error(`video ${r.status}`);
         return r.blob();

@@ -8,10 +8,11 @@ import {
   DEFAULT_LOCATION,
   SAMPLE_READING,
   SAMPLE_HISTORY,
-  INDOOR_AQI,
-  INDOOR_PM25,
+  indoorPm25From,
+  usAqiFromPm25,
   aqiBand,
-  cigsFromPm25,
+  cigsPerWindow,
+  CIG_WINDOW_LABEL,
 } from '../constants/airQuality';
 
 // 270° gauge geometry (shared visual language with SmartDashboard).
@@ -20,6 +21,11 @@ const C = 2 * Math.PI * R;
 const ARC = C * 0.75;
 const ROT = 135;
 const fmt = (n) => (Math.round(n * 10) / 10).toFixed(1);
+// Cigarettes read better as whole numbers once they're double digits.
+const fmtCig = (n) => {
+  const v = Math.max(0, Number.isFinite(n) ? n : 0);
+  return v >= 10 ? String(Math.round(v)) : (Math.round(v * 10) / 10).toFixed(1);
+};
 
 // ── Animated AQI dial ───────────────────────────────────────
 function AqiDial({ value, max = 300, color }) {
@@ -92,7 +98,7 @@ function StatRows({ stats, note, loading }) {
             {r.aqi != null ? `AQI ${r.aqi}` : loading ? '…' : '—'}
           </span>
           <span className="air-stat__cig font-body">
-            {r.pm != null ? `${fmt(cigsFromPm25(r.pm))} cig/day` : loading ? '…' : '—'}
+            {r.pm != null ? `${fmtCig(cigsPerWindow(r.pm))} cig/${CIG_WINDOW_LABEL}` : loading ? '…' : '—'}
           </span>
         </div>
       ))}
@@ -104,7 +110,7 @@ function StatRows({ stats, note, loading }) {
 // ── One comparison card ─────────────────────────────────────
 function CompareCard({ variant, place, aqi, pm25, color, bandLabel, cigs, stats, statsNote, statsLoading, live }) {
   const out = variant === 'out';
-  const cigDisplay = fmt(useCountUp(cigs, true, 1500));
+  const cigDisplay = fmtCig(useCountUp(cigs, true, 1500));
   return (
     <div className={`air-card air-card--${variant}`} style={out ? { '--accent': color } : undefined}>
       <div className="air-card__head">
@@ -129,7 +135,7 @@ function CompareCard({ variant, place, aqi, pm25, color, bandLabel, cigs, stats,
         <Cigarette intensity={out ? 'high' : 'low'} />
         <div className="air-card__cig-num">
           <span className="font-display">{cigDisplay}</span>
-          <span className="font-body">cigarettes / day · now</span>
+          <span className="font-body">cigarettes a {CIG_WINDOW_LABEL} · now</span>
         </div>
       </div>
 
@@ -213,11 +219,24 @@ export default function AirCheck() {
   const reading = data || (error ? SAMPLE_READING : null);
   const hist = history.data || (history.error ? SAMPLE_HISTORY : null);
   const outBand = aqiBand(reading?.usAqi ?? 0);
-  const inBand = aqiBand(INDOOR_AQI);
-  const cigsOut = reading ? cigsFromPm25(reading.pm25) : 0;
-  const cigsIn = cigsFromPm25(INDOOR_PM25);
-  // Indoor stays steady year-round (purifier + greenery).
-  const inStats = { peakAqi: INDOOR_AQI, peakPm: INDOOR_PM25, avgAqi: INDOOR_AQI, avgPm: INDOOR_PM25 };
+
+  // Indoor is always DERIVED from the current outdoor reading → guaranteed
+  // cleaner than the street (no more fixed value that loses to clean cities).
+  const indoorPm = indoorPm25From(reading?.pm25 ?? 0);
+  const indoorAqi = usAqiFromPm25(indoorPm);
+  const inBand = aqiBand(indoorAqi);
+  const cigsOut = reading ? cigsPerWindow(reading.pm25) : 0;
+  const cigsIn = cigsPerWindow(indoorPm);
+  // Indoor history mirrors the outdoor history, cleaned — so even on the city's
+  // worst day the inside stays in the "Good" range.
+  const inStats = hist
+    ? {
+        peakPm: indoorPm25From(hist.peakPm),
+        peakAqi: usAqiFromPm25(indoorPm25From(hist.peakPm)),
+        avgPm: indoorPm25From(hist.avgPm),
+        avgAqi: usAqiFromPm25(indoorPm25From(hist.avgPm)),
+      }
+    : null;
   const saved = Math.max(0, cigsOut - cigsIn);
   const placeLabel = loc ? [loc.name, loc.region].filter(Boolean).join(', ') : 'Loading…';
 
@@ -289,33 +308,34 @@ export default function AirCheck() {
             live={!!data}
             stats={hist}
             statsLoading={history.loading}
-            statsNote="cigarettes/day if that air lasted all day"
+            statsNote="cigarettes a month at that level of air"
           />
           <div className="air-vs" aria-hidden="true"><span>vs</span></div>
           <CompareCard
             variant="in"
             place="Inside · MyGreenHome"
-            aqi={INDOOR_AQI}
-            pm25={INDOOR_PM25}
+            aqi={indoorAqi}
+            pm25={indoorPm}
             color={inBand.color}
-            bandLabel="Good"
+            bandLabel={inBand.label}
             cigs={cigsIn}
             stats={inStats}
-            statsNote="steady — every day of the year"
+            statsNote="purifier + greenery, every day of the year"
           />
         </div>
 
         {/* Delta */}
         <div className="air-delta" style={{ opacity: reading ? 1 : 0 }}>
-          <span className="air-delta__big font-display">{fmt(saved)}</span>
+          <span className="air-delta__big font-display">{fmtCig(saved)}</span>
           <span className="air-delta__txt font-body">
-            cigarettes a day a MyGreenHome clears from the air you breathe
+            cigarettes a month a MyGreenHome clears from the air you breathe
           </span>
         </div>
 
         <p className="air-cite font-body">
           Live &amp; past-year data: Open-Meteo · Cigarette equivalence: Berkeley Earth (≈22 µg/m³ PM2.5 ≈ 1 cigarette/day,
-          if sustained 24h). Indoor figure is an estimated target with an air purifier + greenery, not a measurement.
+          if sustained 24h) — shown per month (×30). Indoor figure is an estimated target with an air purifier + greenery,
+          not a measurement.
         </p>
       </div>
     </section>

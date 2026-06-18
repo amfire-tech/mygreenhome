@@ -6,10 +6,43 @@
 export const CIG_PER_PM25 = 22;
 
 // "Inside a MyGreenHome" — an estimated target with an air purifier + greenery,
-// not a live measurement. Held steady at ~US AQI 30 (PM2.5 ≈ 7.2 µg/m³),
-// year-round, regardless of how bad the air gets outside.
-export const INDOOR_AQI = 30;
-export const INDOOR_PM25 = 7.2;
+// not a live measurement. It is always derived FROM the outdoor reading so the
+// inside is guaranteed cleaner than the street (a fixed indoor value used to
+// look *worse* than already-clean cities like London). Model: ~70% PM2.5
+// removal, capped to a "Good" ceiling (a well-sized purifier holds a sealed
+// room at "Good" even when the city is hazardous) and a small clean floor.
+export const INDOOR_REMOVAL = 0.7; // fraction of PM2.5 the home clears
+export const INDOOR_PM_CEIL = 12; // µg/m³ — top of the US "Good" band
+export const INDOOR_PM_FLOOR = 2; // never claim cleaner than this
+
+// Indoor PM2.5 for a given outdoor PM2.5 — always strictly lower than outdoor.
+export function indoorPm25From(outdoorPm25) {
+  const out = Math.max(0, Number.isFinite(outdoorPm25) ? outdoorPm25 : 0);
+  const cleaned = Math.min(out * (1 - INDOOR_REMOVAL), INDOOR_PM_CEIL);
+  // clamp to the floor, but never above ~85% of outdoor (stays better even when
+  // the street is already pristine), and never below 0.
+  const v = Math.min(out * 0.85, Math.max(INDOOR_PM_FLOOR, cleaned));
+  return Math.round(Math.max(0, v) * 10) / 10;
+}
+
+// US EPA AQI from a PM2.5 concentration (µg/m³) — same scale Open-Meteo reports
+// for the outdoor reading, so the indoor dial is consistent with it.
+const PM25_AQI_BP = [
+  [0.0, 12.0, 0, 50],
+  [12.1, 35.4, 51, 100],
+  [35.5, 55.4, 101, 150],
+  [55.5, 150.4, 151, 200],
+  [150.5, 250.4, 201, 300],
+  [250.5, 350.4, 301, 400],
+  [350.5, 500.4, 401, 500],
+];
+export function usAqiFromPm25(pm25) {
+  const c = Math.max(0, Number.isFinite(pm25) ? pm25 : 0);
+  for (const [cLo, cHi, aLo, aHi] of PM25_AQI_BP) {
+    if (c <= cHi) return Math.round(((aHi - aLo) / (cHi - cLo)) * (c - cLo) + aLo);
+  }
+  return 500;
+}
 
 // Shown on first load so the section is never empty (one of India's most
 // polluted metros makes the comparison land hard).
@@ -38,4 +71,18 @@ export function aqiBand(usAqi) {
 export function cigsFromPm25(pm25) {
   const v = Math.max(0, Number.isFinite(pm25) ? pm25 : 0);
   return Math.round((v / CIG_PER_PM25) * 10) / 10;
+}
+
+// We headline the equivalence over a MONTH, not a day — same science, bigger and
+// more visceral number (a clean-ish "0.3/day" reads as nothing; "9/month" lands).
+// Change CIG_WINDOW_DAYS/LABEL together to reframe (7 = week, 365 = year).
+export const CIG_WINDOW_DAYS = 30;
+export const CIG_WINDOW_LABEL = 'month';
+
+// Cigarettes over the headline window for a given PM2.5 (unrounded — format at
+// display so the count-up stays accurate; multiplying the rounded daily figure
+// would drift).
+export function cigsPerWindow(pm25) {
+  const v = Math.max(0, Number.isFinite(pm25) ? pm25 : 0);
+  return (v / CIG_PER_PM25) * CIG_WINDOW_DAYS;
 }

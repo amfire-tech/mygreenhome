@@ -36,7 +36,7 @@ export default function SmartEcosystem() {
         <div className="eco__device" style={reveal(0.32)}>
           <span className="eco__glow" aria-hidden="true" />
           <img
-            src="/images/meter.png"
+            src="/images/meter.png?v=neobot"
             alt="NeoBot smart-garden controller showing soil health, air quality and irrigation status"
           />
         </div>
