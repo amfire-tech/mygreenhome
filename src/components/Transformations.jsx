@@ -5,10 +5,10 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // Full branded before/after graphics (≈3:2). Shown one at a time as a big
 // card; scrolling through the pinned section swaps the active card.
 const SLIDES = [
-  { src: '/images/LIVING ROOM.png', label: 'Living Room', tag: 'Indoor', alt: 'Indoor living room — before and after transformation' },
-  { src: '/images/BALCONY.png', label: 'Balcony', tag: 'Balcony', alt: 'Balcony — before and after transformation' },
-  { src: '/images/TERRACE.png', label: 'Terrace', tag: 'Terrace', alt: 'Terrace — before and after transformation' },
-  { src: '/images/OPEN.png', label: 'Open Terrace', tag: 'Open Air', alt: 'Open terrace — before and after transformation' },
+  { src: '/images/LIVING ROOM.webp', label: 'Living Room', tag: 'Indoor', alt: 'Indoor living room — before and after transformation' },
+  { src: '/images/BALCONY.webp', label: 'Balcony', tag: 'Balcony', alt: 'Balcony — before and after transformation' },
+  { src: '/images/TERRACE.webp', label: 'Terrace', tag: 'Terrace', alt: 'Terrace — before and after transformation' },
+  { src: '/images/OPEN.webp', label: 'Open Terrace', tag: 'Open Air', alt: 'Open terrace — before and after transformation' },
 ];
 
 // Decorative swaying leaf for the right rail.
@@ -37,21 +37,37 @@ export default function Transformations() {
   const sectionRef = useRef(null);
   const [active, setActive] = useState(0);
 
+  // Only drive the per-frame scroll math while the section is actually on
+  // screen. Otherwise the rAF read getBoundingClientRect() every frame for the
+  // whole page — a forced reflow that made unrelated scrolling janky.
   useEffect(() => {
-    let raf;
+    const el = sectionRef.current;
+    if (!el) return;
+    let raf = null;
     const tick = () => {
-      const el = sectionRef.current;
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        const span = el.offsetHeight - window.innerHeight;
-        const p = clamp(-rect.top / (span || 1), 0, 0.9999);
-        const idx = Math.floor(p * SLIDES.length);
-        setActive((prev) => (prev === idx ? prev : idx));
-      }
+      const rect = el.getBoundingClientRect();
+      const span = el.offsetHeight - window.innerHeight;
+      const p = clamp(-rect.top / (span || 1), 0, 0.9999);
+      const idx = Math.floor(p * SLIDES.length);
+      setActive((prev) => (prev === idx ? prev : idx));
       raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting && raf === null) {
+          raf = requestAnimationFrame(tick);
+        } else if (!e.isIntersecting && raf !== null) {
+          cancelAnimationFrame(raf);
+          raf = null;
+        }
+      },
+      { rootMargin: '100px 0px' }
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      if (raf !== null) cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (

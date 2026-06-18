@@ -31,17 +31,20 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.mygreenhome.in/" />
     <meta property="og:locale" content="en_IN" />
-    <meta property="og:image" content="https://www.mygreenhome.in/images/hero_home.png" />
+    <meta property="og:image" content="https://www.mygreenhome.in/images/hero.jpg" />
     <meta property="og:image:alt" content="A lush smart green home at golden hour" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="MyGreenHome — Smart Gardens. Healthy Homes." />
     <meta name="twitter:description" content="Premium smart indoor & outdoor gardens. We Design. We Set Up. We Maintain. You Enjoy." />
-    <meta name="twitter:image" content="https://www.mygreenhome.in/images/hero_home.png" />
+    <meta name="twitter:image" content="https://www.mygreenhome.in/images/hero.jpg" />
 
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- LCP: warm up the hero background image so it paints fast -->
+    <link rel="preload" as="image" href="/images/hero_home.webp" fetchpriority="high" />
 
     <!-- Structured data -->
     <script type="application/ld+json">
@@ -51,7 +54,7 @@
         "@id": "https://www.mygreenhome.in/",
         "name": "MyGreenHome",
         "url": "https://www.mygreenhome.in/",
-        "image": "https://www.mygreenhome.in/images/hero_home.png",
+        "image": "https://www.mygreenhome.in/images/hero.jpg",
         "description": "MyGreenHome designs, sets up and maintains premium smart indoor & outdoor gardens — making homes healthier, calmer and more beautiful.",
         "telephone": "+91-93684-08577",
         "email": "hello@mygreenhome.in",

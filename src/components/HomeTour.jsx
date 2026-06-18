@@ -48,22 +48,50 @@ export default function HomeTour({ mouseRef }) {
   // Fetch the clip once as a fully-seekable in-memory blob (Cloudflare Pages
   // serves no HTTP range, so a plain <video src> can't be seeked for the
   // tap-to-jump dots — a blob URL always can). Loop + autoplay run off this.
+  //
+  // It's ~9 MB, so we DON'T pull it on the critical path: we wait until the
+  // browser is idle (or the tour is approaching the viewport, whichever first),
+  // so the hero paints instantly and the page feels light on load.
   useEffect(() => {
     let url = null;
     let cancelled = false;
-    fetch('/video/walkthrough.mp4?v=60fps')
-      .then((r) => {
-        if (!r.ok) throw new Error(`video ${r.status}`);
-        return r.blob();
-      })
-      .then((blob) => {
-        if (cancelled) return;
-        url = URL.createObjectURL(blob);
-        setSrc(url);
-      })
-      .catch(() => {});
+    let started = false;
+
+    const load = () => {
+      if (started || cancelled) return;
+      started = true;
+      fetch('/video/walkthrough.mp4?v=60fps-lite')
+        .then((r) => {
+          if (!r.ok) throw new Error(`video ${r.status}`);
+          return r.blob();
+        })
+        .then((blob) => {
+          if (cancelled) return;
+          url = URL.createObjectURL(blob);
+          setSrc(url);
+        })
+        .catch(() => {});
+    };
+
+    // Whichever fires first: the section nears the viewport, or the browser idles.
+    let io = null;
+    const el = sectionRef.current;
+    if (el && 'IntersectionObserver' in window) {
+      io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) load();
+        },
+        { rootMargin: '600px 0px' }
+      );
+      io.observe(el);
+    }
+    const ric = window.requestIdleCallback || ((cb) => setTimeout(cb, 1500));
+    const idleId = ric(load, { timeout: 3000 });
+
     return () => {
       cancelled = true;
+      io?.disconnect();
+      if (window.cancelIdleCallback && typeof idleId === 'number') window.cancelIdleCallback(idleId);
       if (url) URL.revokeObjectURL(url);
     };
   }, []);
