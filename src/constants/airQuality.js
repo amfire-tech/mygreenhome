@@ -9,10 +9,12 @@ export const CIG_PER_PM25 = 22;
 // not a live measurement. It is always derived FROM the outdoor reading so the
 // inside is guaranteed cleaner than the street (a fixed indoor value used to
 // look *worse* than already-clean cities like London). Model: ~70% PM2.5
-// removal, capped to a "Good" ceiling (a well-sized purifier holds a sealed
-// room at "Good" even when the city is hazardous) and a small clean floor.
+// removal, then a HARD CAP at US AQI 25 — the inside never shows worse than 25,
+// whether the city is London or hazardous Delhi (a well-sized purifier holds a
+// sealed room there). Low-pollution cities just use the derived value (< 25).
 export const INDOOR_REMOVAL = 0.7; // fraction of PM2.5 the home clears
-export const INDOOR_PM_CEIL = 12; // µg/m³ — top of the US "Good" band
+export const INDOOR_AQI_CAP = 25; // inside never exceeds this, any city
+export const INDOOR_PM_CEIL = 6; // µg/m³ ≈ US AQI 25 (the cap above)
 export const INDOOR_PM_FLOOR = 2; // never claim cleaner than this
 
 // Indoor PM2.5 for a given outdoor PM2.5 — always strictly lower than outdoor.
