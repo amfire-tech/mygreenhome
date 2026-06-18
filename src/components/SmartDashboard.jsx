@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useInView } from '../hooks/useInView';
 import { useCountUp } from '../hooks/useCountUp';
 
@@ -16,59 +16,127 @@ const C = 2 * Math.PI * R; // full circumference
 const ARC = C * 0.75; // visible 270° arc length
 const ROT = 135; // rotate so the gap sits centered at the bottom
 
-// ── 1 · AQI AIR-QUALITY GAUGE ───────────────────────────────
-function AqiGauge({ inView }) {
-  const aqi = Math.round(useCountUp(32, inView, 1700));
-  const frac = 0.32; // 32 / 100 → sits firmly inside the green "Good" band
-  const needleAngle = ROT + (inView ? frac * 270 : 0);
+// ── 1 · AQI AIR-QUALITY GAUGE (auto-cycling) ────────────────
+// Loops through purified-indoor → polluted-outdoor states so the dial tells the
+// whole story on its own: needle sweeps, number glides, band + colour change.
+const AQI_MAX = 400; // full sweep top (so 350+ lands deep in the red zone)
+const AQI_STATES = [
+  { aqi: 25, label: 'Good', note: 'Indoor · purified', text: '#4ab87a' },
+  { aqi: 147, label: 'Unhealthy', note: 'Outdoor · city air', text: '#e8893f' },
+  { aqi: 358, label: 'Hazardous', note: 'Outdoor · polluted', text: '#e2574c' },
+];
+// US-AQI colour bands mapped onto the 0–AQI_MAX arc.
+const AQI_BANDS = [
+  { from: 0, to: 50, color: '#4ab87a' },
+  { from: 50, to: 100, color: '#d8a23a' },
+  { from: 100, to: 150, color: '#e07b39' },
+  { from: 150, to: 200, color: '#c2503a' },
+  { from: 200, to: 300, color: '#8e44ad' },
+  { from: 300, to: AQI_MAX, color: '#7e2d2d' },
+];
 
-  // three coloured bands along the track: green · amber · red
-  const bands = [
-    { color: '#4ab87a', len: ARC * 0.5, off: 0 },
-    { color: '#d8a23a', len: ARC * 0.25, off: -ARC * 0.5 },
-    { color: '#c2503a', len: ARC * 0.25, off: -ARC * 0.75 },
-  ];
+function AqiGauge({ inView }) {
+  const [idx, setIdx] = useState(0);
+  const [display, setDisplay] = useState(0); // tweened AQI number (drives needle)
+  const fromRef = useRef(0);
+  const state = AQI_STATES[idx];
+
+  // Advance to the next state on a loop, only while the card is on screen.
+  useEffect(() => {
+    if (!inView) return;
+    const id = setInterval(() => setIdx((i) => (i + 1) % AQI_STATES.length), 2800);
+    return () => clearInterval(id);
+  }, [inView]);
+
+  // Glide the number (and needle) from the previous value to the new target.
+  useEffect(() => {
+    if (!inView) {
+      setDisplay(0);
+      fromRef.current = 0;
+      return;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplay(state.aqi);
+      fromRef.current = state.aqi;
+      return;
+    }
+    const from = fromRef.current;
+    const to = state.aqi;
+    const t0 = performance.now();
+    const dur = 950;
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    let raf;
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      setDisplay(from + (to - from) * ease(p));
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else {
+        setDisplay(to);
+        fromRef.current = to;
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [idx, inView, state.aqi]);
+
+  const frac = Math.max(0, Math.min(1, display / AQI_MAX));
+  const needleAngle = ROT + frac * 270;
 
   return (
     <div className="eco-card">
-      <span className="eco-card__eyebrow font-body">Air Quality · AQI</span>
+      <span className="eco-card__eyebrow font-body">Air Quality</span>
       <div className="eco-card__viz aqi-viz">
         {/* drifting dust that clears away */}
         {[...Array(5)].map((_, i) => (
           <span key={i} className="aqi-particle" style={{ left: `${15 + i * 16}%`, animationDelay: `${i * 0.7}s` }} />
         ))}
         <svg viewBox="0 0 200 200" className="aqi-svg" aria-hidden="true">
-          {bands.map((b, i) => (
-            <circle
-              key={i}
-              cx="100"
-              cy="100"
-              r={R}
-              fill="none"
-              stroke={b.color}
-              strokeWidth="9"
-              strokeLinecap="butt"
-              strokeDasharray={`${b.len - 3} ${C}`}
-              strokeDashoffset={b.off}
-              transform={`rotate(${ROT} 100 100)`}
-              opacity={inView ? 0.9 : 0.25}
-              style={{ transition: `opacity 0.9s ease ${0.2 + i * 0.12}s` }}
-            />
-          ))}
+          {AQI_BANDS.map((b, i) => {
+            const s = b.from / AQI_MAX;
+            const len = ((b.to - b.from) / AQI_MAX) * ARC;
+            const active = display >= b.from && display < b.to;
+            return (
+              <circle
+                key={i}
+                cx="100"
+                cy="100"
+                r={R}
+                fill="none"
+                stroke={b.color}
+                strokeWidth="9"
+                strokeLinecap="butt"
+                strokeDasharray={`${Math.max(0, len - 2)} ${C}`}
+                strokeDashoffset={-s * ARC}
+                transform={`rotate(${ROT} 100 100)`}
+                opacity={inView ? (active ? 1 : 0.26) : 0.16}
+                style={{ transition: 'opacity 0.5s ease' }}
+              />
+            );
+          })}
           {/* pointer — rides just inside the arc so it never crosses the value */}
-          <g transform={`rotate(${needleAngle} 100 100)`} style={{ transition: 'transform 1.7s cubic-bezier(0.34,1.2,0.4,1)' }}>
+          <g transform={`rotate(${needleAngle} 100 100)`}>
             <line x1="156" y1="100" x2="170" y2="100" stroke="#f5f0e8" strokeWidth="3" strokeLinecap="round" />
             <circle cx="174" cy="100" r="5" fill="#f5f0e8" stroke="#0b1610" strokeWidth="1.5" />
           </g>
         </svg>
         <div className="aqi-readout">
-          <span className="aqi-readout__value font-display">{aqi}</span>
+          <span
+            className="aqi-readout__value font-display"
+            style={{ color: state.text, transition: 'color 0.6s ease' }}
+          >
+            {Math.round(display)}
+          </span>
           <span className="aqi-readout__unit font-body">AQI</span>
         </div>
       </div>
       <div className="eco-card__foot">
-        <span className="eco-pill" style={{ color: '#4ab87a', background: '#4ab87a22' }}>● Good</span>
-        <span className="eco-card__note font-body">Indoor air · purified</span>
+        <span
+          className="eco-pill"
+          style={{ color: state.text, background: `${state.text}22`, transition: 'color 0.5s ease, background 0.5s ease' }}
+        >
+          ● {state.label}
+        </span>
+        <span key={idx} className="eco-card__note font-body aqi-note">{state.note}</span>
       </div>
     </div>
   );
