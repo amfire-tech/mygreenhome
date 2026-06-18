@@ -1,50 +1,60 @@
 import { SMART_METRICS } from '../constants/smart';
 
-// One detail card per Home-Tour scene, shown on the right of the split stage.
-// App.jsx remounts this (key={sceneId}) on every scene change, so the
-// slide-in-from-right entrance (see .tour-card / cardIn in index.css) replays.
+// One detail card per Home-Tour scene, shown beside the looping walkthrough.
+// HomeTour remounts this (key={sceneId}) on every scene change so the entrance
+// animation (.tcard / cardRise) replays as the video glides between zones.
 //
-//   scene 0      → cinematic intro
+//   scene 0      → title card ("Step Inside")
 //   scenes 1–4   → zone headline + curated plant list
 //   scene 5      → Neobot smart dashboard
-export default function TourCard({ scene, cards = [], sceneId }) {
+export default function TourCard({ scene, cards = [], sceneId, index = 1, total = 6 }) {
   const isIntro = sceneId === 0;
   const isSmart = sceneId === 5;
 
   return (
-    <div className={`tour-card${isIntro ? ' tour-card--intro' : ''}`}>
-      <span className="tour-card__badge">
-        <span className="tour-card__dot" style={isSmart ? { animation: 'pulse 2s ease-in-out infinite' } : undefined} />
-        {isIntro ? 'The Home Tour' : scene.zone}
-      </span>
+    <article className={`tcard${isIntro ? ' tcard--intro' : ''}${isSmart ? ' tcard--smart' : ''}`}>
+      <header className="tcard__top">
+        <span className="tcard__badge">
+          <span className="tcard__dot" />
+          {isIntro ? 'The Home Tour' : scene.zone}
+        </span>
+        <span className="tcard__index font-display">
+          {String(index).padStart(2, '0')}
+          <i>/ {String(total).padStart(2, '0')}</i>
+        </span>
+      </header>
 
       {isIntro ? (
-        <h2 className="tour-card__title font-display">
-          Step <span className="font-script tour-card__script">Inside.</span>
-        </h2>
+        <h3 className="tcard__title font-display">
+          Step <span className="font-script tcard__script">Inside.</span>
+        </h3>
       ) : (
-        <h2 className="tour-card__title font-display">
+        <h3 className="tcard__title font-display">
           {scene.headline[0]}
           <br />
           {scene.headline[1]}
-        </h2>
+        </h3>
       )}
 
-      <p className="tour-card__sub font-body">{scene.sub}</p>
+      <p className="tcard__sub font-body">{scene.sub}</p>
 
       {/* Plant list — scenes 1–4 */}
       {!isIntro && !isSmart && (
-        <div className="tour-card__list">
+        <div className="tcard__list">
           {cards.map((p, i) => (
-            <div className="tour-plant" key={p.name} style={{ '--d': `${0.35 + i * 0.12}s` }}>
-              <span className="tour-plant__emoji" style={{ background: `${p.accent}33`, borderColor: `${p.accent}66` }}>
+            <div
+              className="tplant"
+              key={p.name}
+              style={{ '--d': `${0.3 + i * 0.1}s`, '--accent': p.accent }}
+            >
+              <span className="tplant__icon" style={{ background: `${p.accent}33`, borderColor: `${p.accent}66` }}>
                 {p.emoji}
               </span>
-              <span className="tour-plant__text">
-                <span className="tour-plant__name font-body">{p.name}</span>
-                <span className="tour-plant__sci font-body">{p.scientific}</span>
+              <span className="tplant__body">
+                <span className="tplant__name font-body">{p.name}</span>
+                <span className="tplant__sci font-body">{p.scientific}</span>
               </span>
-              <span className="tour-plant__tag font-body">{p.tag}</span>
+              <span className="tplant__tag font-body">{p.tag}</span>
             </div>
           ))}
         </div>
@@ -52,29 +62,32 @@ export default function TourCard({ scene, cards = [], sceneId }) {
 
       {/* Smart dashboard — scene 5 */}
       {isSmart && (
-        <div className="tour-card__list">
+        <div className="tcard__list">
           {SMART_METRICS.map((m, i) => (
-            <div className="tour-metric" key={m.label} style={{ '--d': `${0.35 + i * 0.1}s` }}>
-              <span className="tour-metric__label font-body">{m.label}</span>
-              <span className="tour-metric__right">
-                <span className="tour-metric__value font-body" style={{ color: m.color }}>
-                  {m.value}
-                  {m.unit}
-                </span>
-                <span className="tour-metric__chip font-body" style={{ color: m.color, background: `${m.color}22` }}>
-                  {m.status}
-                </span>
+            <div className="tmetric" key={m.label} style={{ '--d': `${0.3 + i * 0.08}s`, '--c': m.color }}>
+              <span className="tmetric__label font-body">{m.label}</span>
+              <span className="tmetric__track" aria-hidden="true">
+                <span className="tmetric__fill" style={{ width: `${parseInt(m.value, 10)}%`, background: m.color }} />
+              </span>
+              <span className="tmetric__value font-body" style={{ color: m.color }}>
+                {m.value}
+                {m.unit}
+              </span>
+              <span className="tmetric__chip font-body" style={{ color: m.color, background: `${m.color}22` }}>
+                {m.status}
               </span>
             </div>
           ))}
-          <div className="tour-metric__foot font-body">
-            <span className="tour-metric__live" />
+          <div className="tmetric__foot font-body">
+            <span className="tmetric__live" />
             Auto-watering active • Next: Today 6:00 AM
           </div>
         </div>
       )}
 
-      {isIntro && <span className="tour-card__hint font-body">Scroll to begin the walk-through ↓</span>}
-    </div>
+      {isIntro && (
+        <p className="tcard__hint font-body">Press &amp; hold to pause · tap a dot to jump</p>
+      )}
+    </article>
   );
 }

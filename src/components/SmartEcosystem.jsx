@@ -37,7 +37,7 @@ export default function SmartEcosystem() {
           <span className="eco__glow" aria-hidden="true" />
           <img
             src="/images/meter.png"
-            alt="Skillbot smart-garden controller showing soil health, air quality and irrigation status"
+            alt="NeoBot smart-garden controller showing soil health, air quality and irrigation status"
           />
         </div>
 

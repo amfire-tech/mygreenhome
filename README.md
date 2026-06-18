@@ -24,23 +24,31 @@ npm run preview    # serve the production build locally → http://localhost:417
 > it is missing or fails to load, an animated per-scene gradient background is
 > shown as a graceful fallback.
 
-> ### ⚠️ The video MUST be encoded all-intra (every frame a keyframe)
-> Smooth scroll-scrubbing depends entirely on fast seeking. A normal H.264 file
-> has sparse keyframes, so seeking to an arbitrary time forces the browser to
-> decode many frames — that is what causes scroll lag and choppy sync. The
-> shipped video is re-encoded to **all-intra 720p** (keyframe interval = 1) so
-> every seek is instant. If you replace the walkthrough, re-encode it the same
-> way:
+> ### Video encoding — 60 fps, normal GOP, for smooth slow loop playback
+> The Home Tour **auto-loops** the clip at **0.6× speed** (it no longer
+> scroll-scrubs). Two things matter for smoothness:
+> 1. **Normal GOP, not all-intra.** An all-intra / every-frame-a-keyframe encode
+>    has a huge per-frame decode cost (~10 Mbps here) and judders, especially on
+>    mobile. Use a ~2 s keyframe interval with P/B frames.
+> 2. **60 fps master (motion-interpolated from the 30 fps source).** At 0.6×,
+>    a 30 fps clip only shows ~18 unique fps → visible judder. Interpolating the
+>    source to 60 fps means 0.6× presents ~36 fps → smooth slow motion.
+>
+> Shipped: 720p, 60 fps, normal GOP, ~4.1 Mbps / ~9.6 MB. To re-create from the
+> 30 fps source:
 >
 > ```bash
-> ffmpeg -i source.mp4 -vf "scale=1280:720:flags=lanczos" \
->   -c:v libx264 -preset slow -crf 22 \
->   -x264-params "keyint=1:min-keyint=1:scenecut=0" \
+> ffmpeg -i source.mp4 \
+>   -vf "scale=1280:720:flags=lanczos,minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1" \
+>   -c:v libx264 -profile:v high -preset medium -crf 21 \
+>   -g 120 -keyint_min 120 -sc_threshold 0 -bf 2 \
 >   -pix_fmt yuv420p -an -movflags +faststart \
 >   public/video/walkthrough.mp4
 > ```
 >
-> Verify with `ffprobe`: I-frame count should equal the total frame count.
+> The only seeks are the six tap-a-dot scene jumps; a 2 s keyframe interval lands
+> them within ~1 s, imperceptible. (If you ever reinstate scroll-scrub, *that*
+> instead needs an all-intra encode — `-g 1 -keyint_min 1 -sc_threshold 0`.)
 
 ---
 

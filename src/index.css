@@ -156,23 +156,6 @@ html.lenis body {
   transform: translateZ(0);
 }
 
-/* The tall scroll stage that pins the sticky cinema. Taller on mobile so the
-   scrub has more breathing room with momentum scrolling. */
-.scroll-stage {
-  height: 650vh;
-  position: relative;
-}
-@media (max-width: 767px) {
-  .scroll-stage {
-    height: 700vh;
-  }
-}
-.scroll-stage__sticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow: hidden;
-}
 
 /* ============================================================
    HERO (Act 0) — cinematic floating green-home, full-bleed
@@ -299,26 +282,27 @@ html.lenis body {
 }
 
 /* ============================================================
-   HOME TOUR — split stage (video left · 3D-glass card right)
+   HOME TOUR — auto-looping walkthrough · scene-synced cards
    ============================================================ */
-.scroll-stage__sticky.tour-split {
-  display: grid;
-  grid-template-columns: 1.04fr 0.96fr;
-  align-content: center; /* center the heading + content block vertically */
-  align-items: center; /* center the video against the (taller) card */
-  gap: clamp(16px, 2.6vh, 30px) clamp(24px, 4vw, 60px);
-  padding: clamp(86px, 11vh, 112px) clamp(24px, 5vw, 72px) clamp(30px, 5vh, 54px);
+.tour2 {
+  position: relative;
+  overflow: hidden;
   background: #060d09;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(18px, 3vh, 30px);
+  padding: clamp(86px, 12vh, 120px) clamp(20px, 5vw, 72px) clamp(40px, 6vh, 64px);
 }
 
-/* Section heading — spans both columns above the video/card row. */
-.tour-heading {
-  grid-column: 1 / -1;
+/* Heading — spans the top, centred above the split row. */
+.tour2__heading {
   position: relative;
   z-index: 15;
   text-align: center;
 }
-.tour-heading__eyebrow {
+.tour2__eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -327,36 +311,72 @@ html.lenis body {
   text-transform: uppercase;
   color: var(--c-gold-light);
 }
-.tour-heading__eyebrow::before,
-.tour-heading__eyebrow::after {
+.tour2__eyebrow::before,
+.tour2__eyebrow::after {
   content: '';
   width: 26px;
   height: 1px;
   background: rgba(200, 169, 110, 0.5);
 }
-.tour-heading__title {
+.tour2__title {
   margin-top: 10px;
   font-weight: 700;
-  font-size: clamp(22px, 3vw, 40px);
+  font-size: clamp(23px, 3.4vw, 42px);
   line-height: 1.05;
   color: #f5f0e8;
 }
 
-/* Left — contained scroll-synced walkthrough */
-.tour-video {
+/* Split row — video left · card right. */
+.tour2__inner {
+  position: relative;
+  z-index: 12;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: clamp(20px, 3.4vw, 52px);
+}
+
+/* Left — the looping walkthrough. */
+.tour2__video {
   position: relative;
   z-index: 10;
   width: 100%;
-  height: min(62vh, 560px);
+  aspect-ratio: 16 / 11;
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 50px 100px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(245, 240, 232, 0.1);
+  transform: translate3d(calc(var(--par-x, 0) * 7px), calc(var(--par-y, 0) * 7px), 0);
+  will-change: transform;
 }
-.tour-video__label {
+.tour2__vid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 1s var(--ease-smooth);
+  filter: brightness(1.05) contrast(1.04) saturate(1.12);
+}
+.tour2__vid-grade,
+.tour2__vid-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.tour2__vid-grade {
+  background: linear-gradient(180deg, rgba(6, 16, 11, 0.32) 0%, rgba(6, 20, 13, 0.03) 28%, rgba(6, 18, 12, 0) 60%, rgba(3, 10, 7, 0.6) 100%);
+}
+.tour2__vid-vignette {
+  background: radial-gradient(130% 110% at 50% 42%, transparent 54%, rgba(3, 10, 7, 0.26) 84%, rgba(2, 7, 5, 0.5) 100%);
+}
+.tour2__label {
   position: absolute;
   left: 16px;
   bottom: 14px;
-  z-index: 6;
+  z-index: 4;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -371,7 +391,7 @@ html.lenis body {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-.tour-video__label::before {
+.tour2__label::before {
   content: '';
   width: 7px;
   height: 7px;
@@ -380,88 +400,88 @@ html.lenis body {
   box-shadow: 0 0 8px #5fbf6a;
   animation: pulse 1.8s ease-in-out infinite;
 }
+.tour2__paused {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f5f0e8;
+  background: rgba(6, 13, 9, 0.55);
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+  transition: opacity 0.3s ease, transform 0.3s var(--ease-smooth);
+  pointer-events: none;
+}
+.tour2__paused.is-on {
+  opacity: 1;
+  transform: none;
+}
 
-/* Right — glass detail card sitting on a stack of "pages" */
-.tour-stage {
+/* Right — scene-synced detail card. The wrapper is the press-and-hold target. */
+.tour2__card {
   position: relative;
   z-index: 12;
+  cursor: grab;
+  touch-action: pan-y; /* keep vertical scroll; a stationary press still pauses */
+  -webkit-tap-highlight-color: transparent;
+  transform: translate3d(calc(var(--par-x, 0) * -7px), calc(var(--par-y, 0) * -7px), 0);
 }
-.tour-tilt {
+.tour2__card:active {
+  cursor: grabbing;
+}
+
+.tcard {
   position: relative;
-}
-/* Stacked sheets peeking out behind the active card. */
-.tour-deck {
-  position: absolute;
-  inset: 0;
-  border-radius: 26px;
-  background: linear-gradient(152deg, rgba(22, 44, 30, 0.55), rgba(7, 14, 10, 0.5));
-  border: 1px solid rgba(245, 240, 232, 0.1);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-  transform-origin: center top;
-}
-.tour-deck--1 {
-  transform: translate(9px, 11px) rotate(1.2deg);
-  opacity: 0.72;
-  z-index: 1;
-}
-.tour-deck--2 {
-  transform: translate(18px, 22px) rotate(2.4deg);
-  opacity: 0.5;
-  z-index: 1;
-}
-.tour-deck--3 {
-  transform: translate(27px, 33px) rotate(3.5deg);
-  opacity: 0.32;
-  z-index: 1;
-}
-.tour-card {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
-  height: min(62vh, 560px); /* fixed — every scene's card is the same size */
-  overflow: hidden;
+  width: 100%;
+  min-height: clamp(360px, 56vh, 520px);
+  padding: clamp(22px, 2vw, 32px);
   border-radius: 26px;
-  padding: clamp(20px, 2vw, 32px);
+  overflow: hidden;
   background: linear-gradient(152deg, rgba(28, 54, 38, 0.6) 0%, rgba(9, 18, 12, 0.52) 60%, rgba(6, 12, 9, 0.62) 100%);
   border: 1px solid rgba(245, 240, 232, 0.16);
   backdrop-filter: blur(26px) saturate(1.25);
   -webkit-backdrop-filter: blur(26px) saturate(1.25);
   box-shadow: 0 50px 100px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 0 60px rgba(74, 124, 89, 0.08);
-  animation: cardIn 0.85s var(--ease-smooth) both;
-  transform-style: preserve-3d;
+  animation: cardRise 0.7s var(--ease-smooth) both;
 }
-/* Matte grain + soft top-light sheen */
-.tour-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-}
-.tour-card::after {
+.tcard::after {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 45%;
+  height: 46%;
   border-radius: inherit;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent);
   pointer-events: none;
 }
-@keyframes cardIn {
-  0% { opacity: 0; transform: translateX(72px) rotateY(-20deg) scale(0.95); }
-  100% { opacity: 1; transform: translateX(0) rotateY(0) scale(1); }
+@keyframes cardRise {
+  0% { opacity: 0; transform: translateY(22px) scale(0.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.tour-card__badge {
+.tcard__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tcard__badge {
   display: inline-flex;
-  align-self: flex-start;
   align-items: center;
   gap: 8px;
   padding: 6px 13px;
@@ -473,162 +493,197 @@ html.lenis body {
   text-transform: uppercase;
   color: #8fd29a;
 }
-.tour-card__dot {
+.tcard__dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #5fbf6a;
+  box-shadow: 0 0 8px #5fbf6a;
+  animation: pulse 2s ease-in-out infinite;
 }
-.tour-card__title {
-  margin-top: 12px;
+.tcard__index {
+  font-size: 26px;
   font-weight: 700;
-  line-height: 1.0;
-  color: #f5f0e8;
-  font-size: clamp(24px, 2.2vw, 36px);
+  line-height: 1;
+  color: rgba(245, 240, 232, 0.92);
 }
-.tour-card__script {
+.tcard__index i {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(245, 240, 232, 0.4);
+  margin-left: 3px;
+}
+
+.tcard__title {
+  margin-top: 16px;
+  font-weight: 700;
+  line-height: 1.02;
+  color: #f5f0e8;
+  font-size: clamp(25px, 2.2vw, 36px);
+}
+.tcard__script {
   color: var(--c-gold-light);
   font-weight: 400;
 }
-.tour-card--intro {
-  justify-content: center; /* short intro content centers in the fixed card */
+.tcard--intro {
+  justify-content: center;
 }
-.tour-card--intro .tour-card__title {
-  font-size: clamp(30px, 3vw, 48px);
+.tcard--intro .tcard__title {
+  font-size: clamp(32px, 3vw, 50px);
 }
-.tour-card__sub {
+.tcard__sub {
   margin-top: 10px;
   font-weight: 300;
-  font-size: 12.5px;
-  line-height: 1.5;
-  max-width: 360px;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 400px;
   color: rgba(245, 240, 232, 0.62);
 }
-.tour-card__hint {
-  display: block;
-  margin-top: 26px;
+.tcard__hint {
+  margin-top: 22px;
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(245, 240, 232, 0.45);
+  color: rgba(245, 240, 232, 0.4);
 }
 
-.tour-card__list {
-  margin-top: 14px;
+/* List fills the remaining card height, vertically centred. */
+.tcard__list {
+  margin-top: 18px;
   flex: 1 1 auto;
-  min-height: 0; /* allow the list to fill the fixed card without overflowing */
-  width: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.tour-plant {
-  display: grid;
-  grid-template-columns: 36px minmax(104px, 132px) max-content;
-  align-items: center;
   justify-content: center;
-  gap: 12px;
-  width: min(100%, 380px);
-  padding: 8px 12px;
-  border-radius: 13px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(245, 240, 232, 0.08);
-  opacity: 0;
-  transform: translateX(24px);
-  animation: plantIn 0.6s var(--ease-smooth) var(--d, 0.4s) forwards;
+  gap: 10px;
 }
-@keyframes plantIn {
+
+/* Plant row — a grid that ALWAYS fits: the middle column is minmax(0,1fr) so the
+   name/scientific truncate, and the tag sits in an `auto` track that can shrink
+   (no max-content blow-out → never overflows the card on any screen). */
+.tplant {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 11px 14px 11px 13px;
+  border-radius: 16px;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(245, 240, 232, 0.09);
+  box-shadow: inset 3px 0 0 var(--accent, #4a7c59), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  transform: translateX(20px);
+  animation: tplantIn 0.55s var(--ease-smooth) var(--d, 0.3s) forwards;
+  transition: transform 0.35s var(--ease-smooth), border-color 0.35s ease;
+}
+@keyframes tplantIn {
   to { opacity: 1; transform: translateX(0); }
 }
-.tour-plant__emoji {
-  flex: none;
-  width: 36px;
-  height: 36px;
+.tplant__icon {
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  border-radius: 11px;
+  font-size: 22px;
+  border-radius: 50%;
   border: 1px solid;
 }
-.tour-plant__text {
+.tplant__body {
   min-width: 0;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
-.tour-plant__name {
-  display: block;
-  font-size: 14px;
+.tplant__name {
+  font-size: 14.5px;
   font-weight: 600;
   color: #f5f0e8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.tour-plant__sci {
-  display: block;
+.tplant__sci {
   font-size: 11px;
   font-style: italic;
-  color: rgba(245, 240, 232, 0.45);
+  color: rgba(245, 240, 232, 0.46);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.tour-plant__tag {
-  flex: none;
+.tplant__tag {
+  white-space: nowrap;
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  white-space: nowrap; /* keep the tag on one line so rows stay aligned */
-  padding: 4px 9px;
+  padding: 5px 10px;
   border-radius: 999px;
-  color: #8fd29a;
-  background: rgba(74, 124, 89, 0.16);
+  color: #9bdca6;
+  background: rgba(74, 124, 89, 0.18);
+  border: 1px solid rgba(74, 124, 89, 0.32);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tplant:hover {
+    transform: translateX(0) translateY(-2px);
+    border-color: rgba(143, 210, 154, 0.4);
+  }
 }
 
-.tour-metric {
+/* Smart dashboard rows — label · mini-bar · value · status. */
+.tmetric {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 18px;
+  grid-template-columns: minmax(70px, auto) minmax(36px, 1fr) auto auto;
   align-items: center;
-  padding: 7px 4px;
-  border-bottom: 1px solid rgba(245, 240, 232, 0.07);
-  opacity: 0;
-  transform: translateX(24px);
-  animation: plantIn 0.6s var(--ease-smooth) var(--d, 0.4s) forwards;
-}
-.tour-metric__label {
-  font-size: 12px;
-  color: rgba(245, 240, 232, 0.6);
-  text-align: right; /* meets the value at the card's centre */
-}
-.tour-metric__right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start; /* value starts at centre, not the far edge */
   gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(245, 240, 232, 0.08);
+  opacity: 0;
+  transform: translateX(20px);
+  animation: tplantIn 0.55s var(--ease-smooth) var(--d, 0.3s) forwards;
 }
-.tour-metric__value {
-  font-size: 16px;
+.tmetric__label {
+  font-size: 12px;
+  color: rgba(245, 240, 232, 0.66);
+  white-space: nowrap;
+}
+.tmetric__track {
+  height: 5px;
+  min-width: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.tmetric__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.tmetric__value {
+  font-size: 15px;
   font-weight: 700;
+  white-space: nowrap;
 }
-.tour-metric__chip {
+.tmetric__chip {
   font-size: 8.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 3px 7px;
   border-radius: 6px;
+  white-space: nowrap;
 }
-.tour-metric__foot {
+.tmetric__foot {
   display: flex;
   align-items: center;
   gap: 9px;
-  margin-top: auto; /* pinned to the bottom of the card, never clipped */
-  padding-top: 12px;
+  margin-top: 8px;
   font-size: 9.5px;
   color: rgba(245, 240, 232, 0.55);
 }
-.tour-metric__live {
+.tmetric__live {
   flex: none;
   width: 8px;
   height: 8px;
@@ -638,96 +693,94 @@ html.lenis body {
   animation: pulse 1.8s ease-in-out infinite;
 }
 
-/* Tablet / mobile — stack: video on top, card below; tilt off. */
+/* Scene progress + tappable dots. */
+.tour2__nav {
+  position: relative;
+  z-index: 14;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+.tour2__progress {
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(245, 240, 232, 0.12);
+  overflow: hidden;
+}
+.tour2__progress-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5fbf6a, var(--c-gold-light));
+}
+.tour2__dots {
+  display: flex;
+  gap: 12px;
+}
+.tour2__dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 240, 232, 0.3);
+  background: rgba(245, 240, 232, 0.12);
+  cursor: pointer;
+  transition: transform 0.3s var(--ease-smooth), background 0.3s ease, border-color 0.3s ease;
+}
+.tour2__dot:hover {
+  border-color: rgba(245, 240, 232, 0.6);
+}
+.tour2__dot.is-active {
+  background: var(--c-gold-light);
+  border-color: var(--c-gold-light);
+  transform: scale(1.3);
+  box-shadow: 0 0 12px rgba(200, 169, 110, 0.5);
+}
+
+/* Tablet / phone — stack video over card, normal flow (no overflow, ever). */
 @media (max-width: 1023px) {
-  .scroll-stage__sticky.tour-split {
+  .tour2 {
+    min-height: 0;
+    gap: 20px;
+    padding: calc(var(--nav-h) + 22px) clamp(18px, 5vw, 40px) 34px;
+  }
+  .tour2__inner {
     grid-template-columns: 1fr;
-    align-content: center;
-    gap: 18px;
-    padding: calc(var(--nav-h) + 18px) clamp(18px, 5vw, 40px) 30px;
+    gap: 16px;
+    max-width: 460px;
   }
-  /* keep the stacked column phone-width so the dashboard rows stay tight
-     (space-between sprawls on wide tablets, pushing values to the far edge) */
-  .tour-video,
-  .tour-stage {
-    width: 100%;
-    max-width: 430px;
-    margin-inline: auto;
+  .tour2__video {
+    aspect-ratio: 16 / 10;
   }
-  .tour-video {
-    height: min(38vh, 300px);
-    transform: none;
+  .tcard {
+    min-height: 0;
+    padding: 20px 16px;
   }
-  .tour-tilt {
-    transform: none;
-  }
-  /* the tilted "deck" sheets lose their 3D angle when stacked → just clutter */
-  .tour-deck {
-    display: none;
-  }
-  .tour-card {
-    padding: 22px;
-    height: auto;
-    min-height: min(60vh, 480px);
-    text-align: center; /* centre the header block (badge · title · sub) */
-  }
-  .tour-card__badge {
-    align-self: center;
-  }
-  .tour-card__sub {
+  .tcard__sub {
     max-width: none;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  /* cluster icon · name · tag together in the middle (match the metric card),
-     instead of name far-left and tag far-right */
-  .tour-plant {
-    justify-content: center;
-  }
-  .tour-plant__text {
-    text-align: center;
-  }
-  .tour-card__list {
-    width: min(calc(100% - 28px), 380px);
-    margin-left: auto;
-    margin-right: auto;
-    transform: translateX(-18px);
-    gap: 8px;
-  }
-  .tour-plant {
-    width: 100%;
-  }
-  .tour-plant__tag {
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-  .tour-metric {
-    width: 100%;
-    grid-template-columns: minmax(92px, 1fr) 48px max-content;
-    column-gap: 10px;
-    padding: 11px 10px;
-    border: 1px solid rgba(245, 240, 232, 0.08);
-    border-radius: 13px;
-    background: rgba(255, 255, 255, 0.035);
-  }
-  .tour-metric__label {
-    text-align: right;
-  }
-  .tour-metric__right {
-    display: contents;
-  }
-  .tour-metric__value {
-    text-align: center;
-  }
-  .tour-metric__chip {
-    justify-self: start;
-    align-self: center;
-    white-space: nowrap;
   }
 }
-@media (max-width: 1023px) and (max-height: 740px) {
-  .tour-video {
-    height: 28vh;
+@media (max-width: 560px) {
+  .tplant {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 11px;
+    padding: 10px 12px;
+  }
+  .tplant__icon {
+    width: 40px;
+    height: 40px;
+    font-size: 19px;
+  }
+  .tcard__index {
+    font-size: 22px;
   }
 }
 
@@ -793,6 +846,14 @@ html.lenis body {
   line-height: 1.05;
   color: #f5f0e8;
 }
+.xform__subtitle {
+  margin: 10px auto 0;
+  max-width: 440px;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.55;
+  color: rgba(245, 240, 232, 0.55);
+}
 .xform__stage {
   position: relative;
   z-index: 4;
@@ -837,6 +898,95 @@ html.lenis body {
 .xform__dot.is-active {
   width: 26px;
   background: var(--c-gold-light);
+}
+
+/* Compact caption + step navigator — hidden on wide screens (the side rails do
+   this job there), revealed once the rails drop out so the card never sits
+   alone in dead space on tablet/phone. */
+.xform__meta {
+  display: none;
+  flex: none;
+  width: 100%;
+  max-width: 540px;
+  margin: clamp(14px, 2.4vh, 22px) auto 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.xform__meta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  text-align: left;
+}
+.xform__meta-tag {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9bdca6;
+  background: rgba(74, 124, 89, 0.16);
+  border: 1px solid rgba(74, 124, 89, 0.32);
+}
+.xform__meta-label {
+  font-size: clamp(19px, 5.4vw, 24px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #f5f0e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: countPop 0.45s var(--ease-smooth);
+}
+.xform__meta-count {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: rgba(245, 240, 232, 0.4);
+}
+.xform__meta-count b {
+  font-size: clamp(30px, 9vw, 42px);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-gold-light);
+  animation: countPop 0.45s var(--ease-smooth);
+}
+.xform__meta-count i {
+  font-style: normal;
+  font-size: 14px;
+}
+.xform__chips {
+  display: none;
+  flex: none;
+  list-style: none;
+  margin: 14px auto 0;
+  padding: 0;
+  width: 100%;
+  max-width: 540px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.xform__chip {
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: rgba(245, 240, 232, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(245, 240, 232, 0.1);
+  transition: color 0.4s ease, background 0.4s ease, border-color 0.4s ease;
+}
+.xform__chip.is-active {
+  color: #0c160e;
+  font-weight: 600;
+  background: var(--c-gold-light);
+  border-color: var(--c-gold-light);
+  box-shadow: 0 6px 18px rgba(200, 169, 110, 0.28);
 }
 
 /* Side gutter rails (only shown when there's room beside the card). */
@@ -950,33 +1100,55 @@ html.lenis body {
 }
 
 @media (max-width: 1559px) {
+  /* rails out → bring in the compact caption + chips, drop the redundant dots */
   .xform__rail { display: none; }
+  .xform__meta { display: flex; }
+  .xform__chips { display: flex; }
+  .xform__dots { display: none; }
 }
-/* Phone/tablet — centre the head + card + dots as one tight cluster and let the
-   landscape card fill the width, instead of a small image floating in a tall
-   stage with big empty gaps above and below. */
+/* Phone/tablet — centre the head + card + caption + chips as one tight cluster
+   and let the landscape card fill the width, instead of a small image floating
+   in a tall stage with big empty gaps above and below. */
 @media (max-width: 760px) {
   .xform {
     height: 300vh;
   }
   .xform__sticky {
     justify-content: center;
-    padding-top: calc(var(--nav-h) + 20px);
-    padding-bottom: 24px;
+    padding-top: calc(var(--nav-h) + 16px);
+    padding-bottom: 22px;
+    gap: 2px;
   }
   .xform__head {
-    margin-bottom: clamp(16px, 3vh, 28px);
+    margin-bottom: clamp(12px, 2.4vh, 20px);
+  }
+  .xform__subtitle {
+    font-size: 12.5px;
+    max-width: 340px;
   }
   .xform__stage {
     flex: none;
     width: 100%;
     aspect-ratio: 3 / 2;
-    max-height: 64vh;
+    max-height: 52vh;
   }
   .xform__card img {
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+  /* tighten the caption for narrow screens */
+  .xform__meta {
+    margin-top: 16px;
+    gap: 12px;
+  }
+  .xform__chips {
+    margin-top: 12px;
+    gap: 7px;
+  }
+  .xform__chip {
+    padding: 6px 12px;
+    font-size: 10.5px;
   }
 }
 

@@ -63,6 +63,9 @@ export default function Transformations() {
         <div className="xform__head">
           <span className="xform__eyebrow font-body">Before · After</span>
           <h2 className="xform__title font-display">Real Spaces, Reimagined</h2>
+          <p className="xform__subtitle font-body">
+            Scroll through four real MyGreenHome makeovers — the same space, reborn in green.
+          </p>
         </div>
 
         {/* Left — animated navigator */}
@@ -112,6 +115,28 @@ export default function Transformations() {
             <Leaf id="3" size={96} top="68%" rotate={168} dur={8} delay={-4} opacity={0.75} />
           </div>
         </div>
+
+        {/* Compact caption + step navigator — fills the tablet/phone layout where
+            the side rails are hidden (otherwise it's a lone card in dead space). */}
+        <div className="xform__meta">
+          <div className="xform__meta-info">
+            <span className="xform__meta-tag font-body">{SLIDES[active].tag}</span>
+            <span className="xform__meta-label font-display" key={active}>
+              {SLIDES[active].label}
+            </span>
+          </div>
+          <span className="xform__meta-count font-display">
+            <b key={active}>{String(active + 1).padStart(2, '0')}</b>
+            <i>/ {String(SLIDES.length).padStart(2, '0')}</i>
+          </span>
+        </div>
+        <ul className="xform__chips" aria-hidden="true">
+          {SLIDES.map((s, i) => (
+            <li key={s.src} className={`xform__chip font-body${i === active ? ' is-active' : ''}`}>
+              {s.label}
+            </li>
+          ))}
+        </ul>
 
         <div className="xform__dots" role="tablist" aria-label="Transformation slides">
           {SLIDES.map((s, i) => (
